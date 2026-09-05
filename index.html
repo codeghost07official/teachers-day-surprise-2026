@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070b14">
+<meta name="description" content="Teacher’s Day Surprise 2026 — an interactive 3D greeting.">
+<title>Teacher’s Day Surprise 2026</title>
+
+<!-- ============================================================
+     FONTS (Google Fonts via CDN, with graceful system fallbacks)
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:            #070b14;
+  --bg-2:          #0b1220;
+  --bg-3:          #101a2c;
+  --ink:           #f4eee0;
+  --ink-soft:      rgba(228, 233, 242, .76);
+  --ink-mute:      #8b95a8;
+  --accent:        #7cc7ff;
+  --accent-soft:   rgba(124, 199, 255, .38);
+  --accent-faint:  rgba(124, 199, 255, .12);
+  --line:          rgba(150, 185, 225, .10);
+  --glass:         rgba(14, 22, 38, .62);
+
+  --serif: 'Cormorant Garamond', 'Cormorant', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --sans:  'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ease-out: cubic-bezier(.16, .84, .3, 1);
+  --ease-soft: cubic-bezier(.4, 0, .2, 1);
+
+  /* pointer-driven variables (updated by JS) */
+  --gx: 50%;
+  --gy: 40%;
+}
+
+/* ============================================================
+   2. BASE / RESET
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; background:var(--bg); }
+body{
+  min-height:100vh;
+  min-height:100svh;
+  overflow-x:hidden;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-weight:300;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+::selection{ background:rgba(124,199,255,.25); color:var(--ink); }
+
+/* ============================================================
+   3. SCENE — fixed atmospheric background layers
+   ============================================================ */
+.scene{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  perspective:1200px;
+  pointer-events:none;
+  z-index:0;
+}
+.layer{
+  position:absolute;
+  inset:-8%;
+  will-change:transform;
+}
+
+/* 3a. Atmosphere: gradient base + soft glows */
+.layer--atmosphere{
+  background:
+    radial-gradient(120% 90% at 50% 110%, #0a1426 0%, transparent 60%),
+    radial-gradient(90% 70% at 50% 0%, #0d182b 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 55%, var(--bg) 100%);
+}
+.glow{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(60px);
+  opacity:.55;
+  will-change:transform, opacity;
+}
+.glow--a{
+  width:58vmax; height:58vmax;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(60,110,170,.32) 0%, rgba(40,80,140,.10) 40%, transparent 70%);
+  animation:glow-breathe 11s var(--ease-soft) infinite alternate;
+}
+.glow--b{
+  width:34vmax; height:34vmax;
+  left:14%; top:22%;
+  background:radial-gradient(circle, rgba(124,199,255,.16) 0%, transparent 65%);
+  animation:glow-drift 17s var(--ease-soft) infinite alternate;
+}
+.glow--c{
+  width:30vmax; height:30vmax;
+  right:8%; bottom:12%;
+  background:radial-gradient(circle, rgba(120,150,210,.14) 0%, transparent 65%);
+  animation:glow-drift 21s var(--ease-soft) infinite alternate-reverse;
+}
+@keyframes glow-breathe{
+  from{ transform:translate(-50%,-50%) scale(.94); opacity:.45; }
+  to  { transform:translate(-50%,-50%) scale(1.06); opacity:.62; }
+}
+@keyframes glow-drift{
+  from{ transform:translate(0,0); }
+  to  { transform:translate(4%, -5%); }
+}
+
+/* 3b. Fine grid */
+.layer--grid{
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:clamp(44px, 6vw, 84px) clamp(44px, 6vw, 84px);
+  -webkit-mask-image:radial-gradient(ellipse 70% 65% at 50% 50%, #000 20%, transparent 100%);
+          mask-image:radial-gradient(ellipse 70% 65% at 50% 50%, #000 20%, transparent 100%);
+  opacity:.9;
+}
+
+/* 3c. Dotted matrix */
+.layer--dots{
+  background-image:radial-gradient(rgba(170,205,240,.16) 1px, transparent 1.2px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 55% 60% at 50% 45%, #000 0%, transparent 100%);
+          mask-image:radial-gradient(ellipse 55% 60% at 50% 45%, #000 0%, transparent 100%);
+  opacity:.55;
+}
+
+/* 3d. Particles canvas */
+#particles{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* 3e. Floating code symbols */
+.layer--symbols{ inset:0; }
+.symbol{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  font-family:var(--mono);
+  font-weight:300;
+  font-size:var(--s, 1.2rem);
+  color:rgba(150, 195, 240, var(--o, .22));
+  letter-spacing:.06em;
+  white-space:nowrap;
+  will-change:transform;
+  transform:translate3d(0,0,0);
+}
+.symbol > span{
+  display:inline-block;
+  animation:float var(--t, 12s) ease-in-out infinite alternate;
+  animation-delay:var(--dl, 0s);
+}
+@keyframes float{
+  from{ transform:translateY(-6px) rotate(-1deg); opacity:.55; }
+  to  { transform:translateY(8px)  rotate(1deg);  opacity:1; }
+}
+
+/* 3f. Decorative terminal-inspired shapes (no text, just abstract lines) */
+.terminal{
+  position:absolute;
+  width:clamp(140px, 16vw, 240px);
+  padding:.9rem 1rem;
+  border:1px solid rgba(150,185,225,.10);
+  border-radius:10px;
+  background:rgba(12,20,36,.28);
+  opacity:.6;
+  will-change:transform;
+}
+.terminal::before{
+  content:'';
+  display:block;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg, rgba(124,199,255,.28), transparent 70%);
+  margin-bottom:.8rem;
+}
+.terminal__dots{ position:absolute; top:.55rem; left:.75rem; display:flex; gap:.3rem; }
+.terminal__dots i{ width:4px; height:4px; border-radius:50%; background:rgba(150,185,225,.35); }
+.terminal__line{
+  height:2px;
+  border-radius:2px;
+  background:rgba(150,185,225,.18);
+  margin-top:.55rem;
+}
+.terminal__line:nth-child(3){ width:62%; }
+.terminal__line:nth-child(4){ width:84%; background:rgba(124,199,255,.22); }
+.terminal__line:nth-child(5){ width:46%; }
+.terminal__line--cursor{
+  width:7px !important;
+  height:9px;
+  background:rgba(124,199,255,.55) !important;
+  animation:blink 1.6s steps(1) infinite;
+}
+@keyframes blink{ 50%{ opacity:0; } }
+.terminal--a{ left:6%; bottom:14%; transform:rotate(-2deg); }
+.terminal--b{ right:7%; top:14%; transform:rotate(1.5deg); }
+
+/* 3g. Cursor light */
+.cursor-light{
+  position:absolute;
+  left:0; top:0;
+  width:70vmin; height:70vmin;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(124,199,255,.16) 0%, rgba(90,140,210,.06) 35%, transparent 70%);
+  mix-blend-mode:screen;
+  transform:translate3d(-50%,-50%,0);
+  will-change:transform, opacity;
+  opacity:0;
+  transition:opacity 1.2s var(--ease-soft);
+}
+.is-ready .cursor-light{ opacity:1; }
+
+/* 3h. Vignette */
+.vignette{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 75% at 50% 50%, transparent 55%, rgba(4,7,14,.72) 100%),
+    linear-gradient(180deg, rgba(4,7,14,.35) 0%, transparent 18%, transparent 82%, rgba(4,7,14,.55) 100%);
+}
+
+/* ============================================================
+   4. STAGE — page flow (content + footer)
+   ============================================================ */
+.stage{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  padding:
+    max(1.25rem, env(safe-area-inset-top))
+    max(1.25rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(1.25rem, env(safe-area-inset-left));
+}
+.stage__main{
+  flex:1;
+  display:grid;
+  place-items:center;
+  perspective:1400px;
+  perspective-origin:50% 45%;
+  padding:clamp(1rem, 4vh, 3rem) 0;
+}
+
+/* ============================================================
+   5. CARD — layered 3D composition
+   ============================================================ */
+.card-tilt{
+  transform-style:preserve-3d;
+  will-change:transform;
+  width:min(100%, 46rem);
+}
+.card{
+  position:relative;
+  transform-style:preserve-3d;
+  width:100%;
+}
+
+/* Depth panels behind the glass */
+.card__panel{
+  position:absolute;
+  inset:0;
+  border-radius:clamp(18px, 2.4vw, 28px);
+  border:1px solid rgba(150,185,225,.08);
+  pointer-events:none;
+}
+.card__panel--back{
+  transform:translate3d(3.5%, 5%, -90px) scale(1.02);
+  background:linear-gradient(160deg, rgba(22,34,58,.28), rgba(10,16,30,.10));
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.7);
+}
+.card__panel--mid{
+  transform:translate3d(-2.5%, -3.5%, -45px) scale(1.01);
+  background:linear-gradient(200deg, rgba(30,50,84,.22), rgba(10,16,30,.08));
+  border-color:rgba(124,199,255,.10);
+}
+
+/* Front glass panel */
+.card__front{
+  position:relative;
+  transform:translateZ(0);
+  transform-style:preserve-3d;
+  border-radius:clamp(18px, 2.4vw, 28px);
+  padding:clamp(2.25rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 4rem);
+  text-align:center;
+  background:
+    radial-gradient(circle at var(--gx) var(--gy), rgba(124,199,255,.12) 0%, transparent 48%),
+    linear-gradient(160deg, rgba(20,30,52,.78) 0%, rgba(10,16,30,.66) 100%);
+  border:1px solid rgba(160,200,240,.14);
+  box-shadow:
+    0 50px 110px -40px rgba(0,0,0,.85),
+    0 0 0 1px rgba(255,255,255,.02) inset,
+    0 1px 0 rgba(255,255,255,.07) inset;
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+          backdrop-filter:blur(18px) saturate(1.2);
+  overflow:hidden;
+}
+/* soft top sheen */
+.card__front::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, transparent 32%);
+  pointer-events:none;
+}
+/* fine inner grid texture */
+.card__front::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(150,185,225,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(150,185,225,.05) 1px, transparent 1px);
+  background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, #000 0%, transparent 100%);
+          mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, #000 0%, transparent 100%);
+  pointer-events:none;
+}
+
+/* corner ticks — quiet terminal reference */
+.card__corner{
+  position:absolute;
+  width:14px; height:14px;
+  border:1px solid rgba(124,199,255,.35);
+  pointer-events:none;
+}
+.card__corner--tl{ top:14px; left:14px; border-right:0; border-bottom:0; }
+.card__corner--tr{ top:14px; right:14px; border-left:0; border-bottom:0; }
+.card__corner--bl{ bottom:14px; left:14px; border-right:0; border-top:0; }
+.card__corner--br{ bottom:14px; right:14px; border-left:0; border-top:0; }
+
+/* Content with depth */
+.card__content{
+  position:relative;
+  transform-style:preserve-3d;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(1rem, 2.6vw, 1.6rem);
+}
+.ornament{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  transform:translateZ(30px);
+  color:var(--accent);
+  font-family:var(--mono);
+  font-size:clamp(.7rem, .9vw, .85rem);
+  letter-spacing:.2em;
+  opacity:.75;
+}
+.ornament::before,.ornament::after{
+  content:'';
+  width:clamp(2rem, 6vw, 3.5rem);
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent-soft));
+}
+.ornament::after{ background:linear-gradient(90deg, var(--accent-soft), transparent); }
+
+.title{
+  font-family:var(--serif);
+  font-weight:300;
+  font-size:clamp(2.35rem, 9.5vw, 5.6rem);
+  line-height:1.02;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  text-wrap:balance;
+  overflow-wrap:break-word;
+  transform:translateZ(48px);
+  text-shadow:0 0 40px rgba(124,199,255,.10), 0 2px 30px rgba(0,0,0,.4);
+}
+.title em{
+  font-style:italic;
+  font-weight:300;
+  background:linear-gradient(180deg, #fbf6ea 0%, #d9e6f5 100%);
+  -webkit-background-clip:text;
+          background-clip:text;
+  color:transparent;
+}
+
+.message{
+  font-family:var(--sans);
+  font-weight:300;
+  font-size:clamp(.95rem, .55vw + .75rem, 1.2rem);
+  line-height:1.7;
+  letter-spacing:.02em;
+  color:var(--ink-soft);
+  max-width:34ch;
+  text-wrap:balance;
+  transform:translateZ(34px);
+}
+
+.signature{
+  margin-top:clamp(.25rem, 1.2vw, .75rem);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.7rem;
+  transform:translateZ(40px);
+}
+.signature::before{
+  content:'';
+  width:1px;
+  height:clamp(1.25rem, 3vw, 2rem);
+  background:linear-gradient(180deg, transparent, var(--accent-soft));
+}
+.signature span{
+  font-family:var(--sans);
+  font-weight:400;
+  font-size:clamp(.7rem, .35vw + .6rem, .85rem);
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:var(--accent);
+  opacity:.9;
+  padding-left:.32em; /* optical centering for tracking */
+}
+
+/* Big brackets flanking the composition */
+.bracket{
+  position:absolute;
+  top:50%;
+  font-family:var(--serif);
+  font-weight:300;
+  font-size:clamp(6rem, 14vw, 12rem);
+  line-height:1;
+  color:rgba(150,195,240,.09);
+  transform:translate3d(0,-50%,70px);
+  pointer-events:none;
+  user-select:none;
+}
+.bracket--l{ left:-.42em; }
+.bracket--r{ right:-.42em; }
+
+/* ============================================================
+   6. FOOTER
+   ============================================================ */
+.footer{
+  position:relative;
+  text-align:center;
+  font-family:var(--mono);
+  font-weight:300;
+  font-size:clamp(.66rem, .3vw + .58rem, .78rem);
+  letter-spacing:.14em;
+  color:var(--ink-mute);
+  padding-top:1rem;
+}
+
+/* ============================================================
+   7. ENTRANCE CHOREOGRAPHY
+   (hidden only when JS is present; revealed via .is-ready)
+   ============================================================ */
+.js .reveal{ opacity:0; }
+.js .layer--atmosphere,
+.js .layer--grid,
+.js .layer--dots,
+.js .layer--symbols,
+.js .terminal,
+.js #particles{ opacity:0; }
+
+.is-ready .layer--atmosphere{ animation:fade-in 1.4s var(--ease-soft) forwards; }
+.is-ready .layer--grid     { animation:fade-in 1.6s var(--ease-soft) .35s forwards; }
+.is-ready .layer--dots     { animation:fade-in 1.6s var(--ease-soft) .5s  forwards; }
+.is-ready #particles       { animation:fade-in 2s   var(--ease-soft) .6s  forwards; }
+.is-ready .layer--symbols  { animation:fade-in 1.8s var(--ease-soft) .8s  forwards; }
+.is-ready .terminal        { animation:fade-in 1.8s var(--ease-soft) 1.2s forwards; }
+
+.is-ready .card       { animation:card-emerge 1.5s var(--ease-out) .55s forwards; }
+.is-ready .bracket    { animation:fade-in 1.6s var(--ease-soft) 1.3s forwards; }
+.is-ready .ornament   { animation:rise .9s var(--ease-out) 1.05s forwards; }
+.is-ready .title      { animation:rise-title 1.2s var(--ease-out) 1.2s forwards; }
+.is-ready .message    { animation:rise 1s var(--ease-out) 1.75s forwards; }
+.is-ready .signature  { animation:rise 1s var(--ease-out) 2.2s forwards; }
+.is-ready .footer     { animation:fade-in 1.2s var(--ease-soft) 2.5s forwards; }
+
+/* keep 3D depth translations inside the animated values */
+@keyframes fade-in{ to{ opacity:1; } }
+@keyframes card-emerge{
+  from{ opacity:0; transform:translate3d(0, 28px, -140px) scale(.97); }
+  to  { opacity:1; transform:translate3d(0, 0, 0) scale(1); }
+}
+@keyframes rise{
+  from{ opacity:0; transform:translate3d(0, 16px, 34px); }
+  to  { opacity:1; transform:translate3d(0, 0, 34px); }
+}
+@keyframes rise-title{
+  from{ opacity:0; transform:translate3d(0, 22px, 48px); letter-spacing:.03em; filter:blur(6px); }
+  to  { opacity:1; transform:translate3d(0, 0, 48px);   letter-spacing:-.01em; filter:blur(0); }
+}
+/* preserve per-element Z after animation */
+.is-ready .ornament { animation-name:rise-ornament; }
+@keyframes rise-ornament{
+  from{ opacity:0; transform:translate3d(0, 14px, 30px); }
+  to  { opacity:.75; transform:translate3d(0, 0, 30px); }
+}
+.is-ready .signature{ animation-name:rise-signature; }
+@keyframes rise-signature{
+  from{ opacity:0; transform:translate3d(0, 14px, 40px); }
+  to  { opacity:1; transform:translate3d(0, 0, 40px); }
+}
+
+/* ============================================================
+   8. RESPONSIVE ADJUSTMENTS
+   ============================================================ */
+@media (max-width: 720px){
+  .bracket{ display:none; }
+  .terminal--b{ display:none; }
+  .terminal--a{ left:4%; bottom:5%; opacity:.4; }
+  .card__panel--back{ transform:translate3d(3%, 4%, -60px) scale(1.01); }
+  .card__panel--mid { transform:translate3d(-2%, -3%, -30px) scale(1.005); }
+  .cursor-light{ width:110vmin; height:110vmin; }
+}
+@media (max-width: 380px){
+  .title{ font-size:clamp(2.1rem, 11vw, 2.8rem); }
+  .card__front{ padding:2rem 1.15rem; }
+  .signature span{ letter-spacing:.24em; }
+}
+@media (max-height: 520px) and (orientation: landscape){
+  .card__front{ padding:1.5rem 2rem; }
+  .card__content{ gap:.7rem; }
+  .title{ font-size:clamp(2rem, 6vh + 1rem, 3.4rem); }
+  .terminal{ display:none; }
+}
+@media (min-width: 1800px){
+  .card-tilt{ width:min(100%, 52rem); }
+}
+
+/* ============================================================
+   9. REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .glow--a,.glow--b,.glow--c,.symbol > span,.terminal__line--cursor{ animation:none !important; }
+  .js .reveal,
+  .js .layer--atmosphere,.js .layer--grid,.js .layer--dots,.js .layer--symbols,.js .terminal,.js #particles{ opacity:1; }
+  .js .ornament{ opacity:.75; }
+  .cursor-light{ opacity:.6; left:50%; top:42%; }
+  .card-tilt{ transform:none !important; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     SCENE — atmospheric depth layers (decorative)
+     ============================================================ -->
+<div class="scene" id="scene" aria-hidden="true">
+  <div class="layer layer--atmosphere" data-depth="0.012">
+    <div class="glow glow--a"></div>
+    <div class="glow glow--b"></div>
+    <div class="glow glow--c"></div>
+  </div>
+
+  <div class="layer layer--grid" data-depth="0.028"></div>
+  <div class="layer layer--dots" data-depth="0.045"></div>
+
+  <canvas id="particles"></canvas>
+
+  <div class="layer layer--symbols">
+    <span class="symbol" style="--x:8%;  --y:18%; --s:clamp(1rem,1.6vw,1.6rem); --o:.20; --t:13s; --dl:-2s"  data-depth="0.07"><span>{ }</span></span>
+    <span class="symbol" style="--x:86%; --y:22%; --s:clamp(.9rem,1.3vw,1.3rem); --o:.16; --t:15s; --dl:-6s"  data-depth="0.05"><span>&lt;/&gt;</span></span>
+    <span class="symbol" style="--x:14%; --y:74%; --s:clamp(.9rem,1.2vw,1.2rem); --o:.14; --t:12s; --dl:-4s"  data-depth="0.06"><span>[ ]</span></span>
+    <span class="symbol" style="--x:80%; --y:70%; --s:clamp(1rem,1.5vw,1.5rem); --o:.18; --t:16s; --dl:-9s"  data-depth="0.08"><span>( )</span></span>
+    <span class="symbol" style="--x:26%; --y:10%; --s:clamp(.75rem,1vw,1rem);   --o:.12; --t:14s; --dl:-1s"  data-depth="0.04"><span>=&gt;</span></span>
+    <span class="symbol" style="--x:68%; --y:88%; --s:clamp(.75rem,1vw,1rem);   --o:.12; --t:11s; --dl:-7s"  data-depth="0.05"><span>;</span></span>
+    <span class="symbol" style="--x:92%; --y:48%; --s:clamp(.8rem,1.1vw,1.1rem); --o:.11; --t:17s; --dl:-3s"  data-depth="0.09"><span>//</span></span>
+    <span class="symbol" style="--x:4%;  --y:46%; --s:clamp(.8rem,1.1vw,1.1rem); --o:.10; --t:18s; --dl:-5s"  data-depth="0.10"><span>&lt;/&gt;</span></span>
+    <span class="symbol" style="--x:52%; --y:6%;  --s:clamp(.7rem,.9vw,.9rem);   --o:.10; --t:19s; --dl:-8s"  data-depth="0.03"><span>{ }</span></span>
+    <span class="symbol" style="--x:40%; --y:92%; --s:clamp(.7rem,.9vw,.9rem);   --o:.10; --t:15s; --dl:-2s"  data-depth="0.04"><span>[ ]</span></span>
+  </div>
+
+  <div class="terminal terminal--a" data-depth="0.035">
+    <div class="terminal__dots"><i></i><i></i><i></i></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line terminal__line--cursor"></div>
+  </div>
+  <div class="terminal terminal--b" data-depth="0.05">
+    <div class="terminal__dots"><i></i><i></i><i></i></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line"></div>
+    <div class="terminal__line terminal__line--cursor"></div>
+  </div>
+
+  <div class="cursor-light" id="cursor-light"></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- ============================================================
+     STAGE — content
+     ============================================================ -->
+<div class="stage">
+  <main class="stage__main" id="greeting">
+    <div class="card-tilt" id="card-tilt">
+      <article class="card reveal" id="card" aria-labelledby="title">
+        <div class="card__panel card__panel--back" aria-hidden="true"></div>
+        <div class="card__panel card__panel--mid" aria-hidden="true"></div>
+
+        <span class="bracket bracket--l reveal" aria-hidden="true">{</span>
+        <span class="bracket bracket--r reveal" aria-hidden="true">}</span>
+
+        <div class="card__front">
+          <span class="card__corner card__corner--tl" aria-hidden="true"></span>
+          <span class="card__corner card__corner--tr" aria-hidden="true"></span>
+          <span class="card__corner card__corner--bl" aria-hidden="true"></span>
+          <span class="card__corner card__corner--br" aria-hidden="true"></span>
+
+          <div class="card__content">
+            <div class="ornament reveal" aria-hidden="true">&lt;/&gt;</div>
+
+            <h1 class="title reveal" id="title">Happy <em>Teacher’s</em> Day</h1>
+
+            <p class="message reveal">Thank You for Inspiring Us to Learn, Build &amp; Think.</p>
+
+            <p class="signature reveal"><span>From Jai Verma</span></p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer reveal">© CodeGhost | Jai Verma</footer>
+</div>
+
+<!-- ============================================================
+     SCRIPT — entrance, pointer parallax, particles
+     ============================================================ -->
+<script>
+(function(){
+  'use strict';
+
+  var doc = document;
+  var root = doc.documentElement;
+  root.classList.add('js');
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer  = window.matchMedia('(pointer: fine)').matches;
+
+  /* ---------- Entrance ---------- */
+  function start(){ doc.body.classList.add('is-ready'); }
+  var fontsReady = (doc.fonts && doc.fonts.ready) ? doc.fonts.ready : Promise.resolve();
+  Promise.race([fontsReady, new Promise(function(r){ setTimeout(r, 700); })])
+    .then(function(){ requestAnimationFrame(start); });
+
+  /* ---------- Elements ---------- */
+  var tilt    = doc.getElementById('card-tilt');
+  var front   = doc.querySelector('.card__front');
+  var light   = doc.getElementById('cursor-light');
+  var canvas  = doc.getElementById('particles');
+  var layers  = Array.prototype.slice.call(doc.querySelectorAll('[data-depth]')).map(function(el){
+    return { el: el, d: parseFloat(el.getAttribute('data-depth')) || 0 };
+  });
+
+  /* ---------- State ---------- */
+  var W = window.innerWidth, H = window.innerHeight;
+  var tx = 0, ty = 0;        // target tilt (-1..1)
+  var cx = 0, cy = 0;        // current tilt
+  var lx = .5, ly = .42;     // target light position (0..1)
+  var clx = .5, cly = .42;   // current light position
+  var pointerActive = false;
+  var orientActive  = false;
+  var lastPointerAt = 0;
+  var MAX_TILT = W < 720 ? 4 : 6;
+
+  function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+  function lerp(a, b, t){ return a + (b - a) * t; }
+
+  /* ---------- Pointer (desktop) ---------- */
+  function onPointerMove(e){
+    if (e.pointerType === 'touch') return;
+    pointerActive = true;
+    lastPointerAt = performance.now();
+    lx = e.clientX / W;
+    ly = e.clientY / H;
+    tx = clamp(lx * 2 - 1, -1, 1);
+    ty = clamp(ly * 2 - 1, -1, 1);
+  }
+  function onPointerLeave(){ pointerActive = false; }
+
+  /* ---------- Device orientation (mobile, when freely available) ---------- */
+  var baseBeta = null;
+  function onOrientation(e){
+    if (e.gamma == null || e.beta == null) return;
+    if (baseBeta === null) baseBeta = e.beta;
+    orientActive = true;
+    var g = clamp(e.gamma / 28, -1, 1);
+    var b = clamp((e.beta - baseBeta) / 28, -1, 1);
+    tx = g * .7;
+    ty = b * .7;
+    lx = .5 + g * .25;
+    ly = .42 + b * .25;
+  }
+
+  /* ---------- Particles ---------- */
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var particles = [];
+
+  function resizeCanvas(){
+    W = window.innerWidth; H = window.innerHeight;
+    MAX_TILT = W < 720 ? 4 : 6;
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    seedParticles();
+  }
+  function seedParticles(){
+    var count = clamp(Math.round((W * H) / 26000), 28, 70);
+    particles = [];
+    for (var i = 0; i < count; i++){
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: .6 + Math.random() * 1.4,
+        z: .3 + Math.random() * .7,             // depth 0.3..1 (1 = closest)
+        vy: -(.04 + Math.random() * .12),
+        vx: (Math.random() - .5) * .06,
+        a: Math.random() * Math.PI * 2,
+        tw: .4 + Math.random() * .6
+      });
+    }
+  }
+  function drawParticles(t, px, py){
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      if (!reduceMotion){
+        p.x += p.vx * p.z;
+        p.y += p.vy * p.z;
+        if (p.y < -10){ p.y = H + 10; p.x = Math.random() * W; }
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+      }
+      var alpha = .10 + .22 * (.5 + .5 * Math.sin(t * .0009 * p.tw + p.a)) * p.z;
+      var ox = px * 22 * p.z, oy = py * 22 * p.z;
+      ctx.beginPath();
+      ctx.arc(p.x + ox, p.y + oy, p.r * p.z, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(170,210,250,' + alpha.toFixed(3) + ')';
+      ctx.fill();
+    }
+  }
+
+  /* ---------- Main loop ---------- */
+  var running = true;
+  function frame(t){
+    if (!running) return;
+
+    // Ambient drift when no pointer / no sensors
+    var idle = !orientActive && (!pointerActive || (t - lastPointerAt > 2500 && !finePointer));
+    if (idle){
+      tx = Math.sin(t * .00022) * .16;
+      ty = Math.cos(t * .00017) * .12;
+      lx = .5 + Math.sin(t * .00018) * .12;
+      ly = .42 + Math.cos(t * .00014) * .10;
+    }
+
+    cx = lerp(cx, tx, .055);
+    cy = lerp(cy, ty, .055);
+    clx = lerp(clx, lx, .06);
+    cly = lerp(cly, ly, .06);
+
+    // Central composition tilt
+    tilt.style.transform = 'rotateX(' + (-cy * MAX_TILT).toFixed(3) + 'deg) rotateY(' + (cx * MAX_TILT).toFixed(3) + 'deg)';
+
+    // Sheen on glass follows light
+    var gx = 50 + (clx - .5) * 90, gy = 40 + (cly - .42) * 90;
+    front.style.setProperty('--gx', gx.toFixed(2) + '%');
+    front.style.setProperty('--gy', gy.toFixed(2) + '%');
+
+    // Background layers at different depths
+    var range = Math.min(W, H);
+    for (var i = 0; i < layers.length; i++){
+      var L = layers[i];
+      var mx = -cx * L.d * range * .5;
+      var my = -cy * L.d * range * .5;
+      L.el.style.transform = 'translate3d(' + mx.toFixed(2) + 'px,' + my.toFixed(2) + 'px,0)';
+    }
+
+    // Cursor light
+    light.style.transform = 'translate3d(' + (clx * W).toFixed(1) + 'px,' + (cly * H).toFixed(1) + 'px,0) translate(-50%,-50%)';
+
+    // Particles
+    drawParticles(t, cx, cy);
+
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- Boot ---------- */
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas, { passive: true });
+
+  if (reduceMotion){
+    // Static, calm composition: one frame only.
+    drawParticles(0, 0, 0);
+    light.style.transform = 'translate3d(' + (W * .5) + 'px,' + (H * .42) + 'px,0) translate(-50%,-50%)';
+    return;
+  }
+
+  window.addEventListener('pointermove', onPointerMove, { passive: true });
+  doc.addEventListener('pointerleave', onPointerLeave, { passive: true });
+  window.addEventListener('blur', onPointerLeave);
+
+  if (!finePointer && 'DeviceOrientationEvent' in window && typeof DeviceOrientationEvent.requestPermission !== 'function'){
+    window.addEventListener('deviceorientation', onOrientation, { passive: true });
+  }
+
+  doc.addEventListener('visibilitychange', function(){
+    if (doc.hidden){ running = false; }
+    else if (!running){ running = true; requestAnimationFrame(frame); }
+  });
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
